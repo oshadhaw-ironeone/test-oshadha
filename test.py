@@ -1,18 +1,16 @@
-dup_ids = dupes["Authorization Identifier"].unique()
+def create_transaction_match_key(df):
+    cols = [
+        "Authorization Identifier",
+        "Merchant Name",
+        "Transaction Amount"
+    ]
 
-for id_val in dup_ids:
-    rows = df_y[df_y["Authorization Identifier"] == id_val]
-    print(f"\n=== Authorization Identifier: {id_val} ===")
-    
-    if len(rows) == 2:
-        row1, row2 = rows.iloc[0], rows.iloc[1]
-        # Compare column by column
-        diff_cols = [col for col in df_y.columns if row1[col] != row2[col] and not (pd.isna(row1[col]) and pd.isna(row2[col]))]
-        
-        if diff_cols:
-            print("Changing columns:")
-            print(rows[diff_cols])
-        else:
-            print("Rows are fully identical (true duplicate)")
-    else:
-        print(f"Found {len(rows)} rows (expected 2) — inspect manually")
+    mask = df[cols].notna().all(axis=1)
+
+    df["transaction_match_key"] = pd.NA
+
+    df.loc[mask, "transaction_match_key"] = (
+        df.loc[mask, "Authorization Identifier"].astype("string").str.strip() + "|" +
+        df.loc[mask, "Merchant Name"].astype("string").str.strip() + "|" +
+        df.loc[mask, "Transaction Amount"].astype("string").str.strip()
+    )
