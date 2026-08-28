@@ -1,16 +1,7 @@
-def create_transaction_match_key(df):
-    cols = [
-        "Authorization Identifier",
-        "Merchant Name",
-        "Transaction Amount"
-    ]
+# Basic overlap: how many df_y keys exist in df
+matches = df_y["transaction_match_key"].isin(df["transaction_match_key"])
+print(f"Matching rows in df_y: {matches.sum()} out of {len(df_y)}")
 
-    mask = df[cols].notna().all(axis=1)
-
-    df["transaction_match_key"] = pd.NA
-
-    df.loc[mask, "transaction_match_key"] = (
-        df.loc[mask, "Authorization Identifier"].astype("string").str.strip() + "|" +
-        df.loc[mask, "Merchant Name"].astype("string").str.strip() + "|" +
-        df.loc[mask, "Transaction Amount"].astype("string").str.strip()
-    )
+# See the actual matched rows from df_y
+matched_rows = df_y[matches]
+print(matched_rows.head())
