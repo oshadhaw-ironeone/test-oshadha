@@ -1,5 +1,7 @@
-print(f"df columns: {len(df.columns)}")
-print(f"df_y columns: {len(df_y.columns)}")
-print(f"Overlapping: {len(df.columns.intersection(df_y.columns))}")
-print(f"Only in df: {len(df.columns.difference(df_y.columns))}")
-print(f"Only in df_y: {len(df_y.columns.difference(df.columns))}")
+# First column of df1 (position 0)
+col1 = df1.iloc[:, 0]
+
+# Compare against a named column in df2
+mask = col1.isin(df2['Transaction_Identifier'])
+
+print(mask.sum(), "of", len(df1), "values from df1's first column are found in df2")
