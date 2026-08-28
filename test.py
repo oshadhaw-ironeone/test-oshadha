@@ -1,7 +1,5 @@
-common_sentinels = [0, -1, 9999, 99999, 999999, -9999, -99999]
-
-for val in common_sentinels:
-    count = (df['column'] == val).sum()
-    if count > 0:
-        pct = count / len(df) * 100
-        print(f"{val}: {count} occurrences ({pct:.1f}%)")
+print(f"df columns: {len(df.columns)}")
+print(f"df_y columns: {len(df_y.columns)}")
+print(f"Overlapping: {len(df.columns.intersection(df_y.columns))}")
+print(f"Only in df: {len(df.columns.difference(df_y.columns))}")
+print(f"Only in df_y: {len(df_y.columns.difference(df.columns))}")
