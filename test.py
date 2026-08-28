@@ -1,35 +1,18 @@
-columns = pd.read_csv(file_name, encoding="cp1252", nrows=0).columns
-print(len(columns))
+import csv
 
-all_null_columns = []
-constant_columns = []
-failed_columns = []
+with open(file_name, encoding="cp1252", newline="") as f:
+    reader = csv.reader(f)
+    header = next(reader)
+    header_fields = len(header)
+    print(f"Header field count: {header_fields}")
 
-for i, col in enumerate(columns):
-    if i % 20 == 0:
-        print(f"{i}/{len(columns)}")
-    try:
-        df = pd.read_csv(
-            file_name,
-            encoding="cp1252",
-            usecols=[i],
-            on_bad_lines="skip",   # skip ragged/malformed rows instead of erroring
-            low_memory=False
-        )
-        if df.shape[1] == 0:
-            failed_columns.append((i, col, "empty result"))
-            continue
-        if df.iloc[:, 0].isna().all():
-            all_null_columns.append(col)
-        elif df.iloc[:, 0].notna().all() and df.iloc[:, 0].nunique() == 1:
-            constant_columns.append(col)
-        del df
-    except Exception as e:
-        failed_columns.append((i, col, str(e)))
+    bad_lines = []
+    for i, row in enumerate(reader, start=2):
+        if len(row) != header_fields:
+            bad_lines.append((i, len(row)))
+        if i % 500_000 == 0:
+            print(f"Checked {i:,} lines so far... ({len(bad_lines)} bad so far)")
 
-print("All null columns:")
-print(all_null_columns)
-print("\nConstant columns:")
-print(constant_columns)
-print("\nFailed columns:")
-print(failed_columns)
+print(f"\nTotal ragged lines: {len(bad_lines)}")
+print("First 10 ragged lines (line_num, field_count):")
+print(bad_lines[:10])
