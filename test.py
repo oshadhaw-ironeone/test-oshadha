@@ -1,7 +1,13 @@
-# First column of df1 (position 0)
-col1 = df1.iloc[:, 0]
+results = []
 
-# Compare against a named column in df2
-mask = col1.isin(df2['Transaction_Identifier'])
+for col1 in df1.columns:
+    vals1 = df1[col1].astype(str).str.strip()
+    for col2 in df2.columns:
+        vals2 = df2[col2].astype(str).str.strip()
+        match_count = vals1.isin(vals2).sum()
+        match_pct = match_count / len(df1) * 100
+        results.append((col1, col2, match_count, match_pct))
 
-print(mask.sum(), "of", len(df1), "values from df1's first column are found in df2")
+results_df = pd.DataFrame(results, columns=['df1_col', 'df2_col', 'matches', 'match_pct'])
+results_df = results_df.sort_values('match_pct', ascending=False)
+print(results_df.head(20))
