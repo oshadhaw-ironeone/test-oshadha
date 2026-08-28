@@ -1,3 +1,7 @@
-print(f"Original: 262, Dropped requested: {len(columns_to_drop)}, Expected remaining: {262 - len(columns_to_drop)}")
-print(f"Actual df columns: {len(df.columns)}")
-print(df.columns.tolist())
+common_sentinels = [0, -1, 9999, 99999, 999999, -9999, -99999]
+
+for val in common_sentinels:
+    count = (df['column'] == val).sum()
+    if count > 0:
+        pct = count / len(df) * 100
+        print(f"{val}: {count} occurrences ({pct:.1f}%)")
