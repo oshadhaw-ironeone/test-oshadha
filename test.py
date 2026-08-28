@@ -1,2 +1,2 @@
-dupes = df_y[df_y["Authorization Identifier"].duplicated(keep=False) & df_y["Authorization Identifier"].notna()]
-print(dupes["Authorization Identifier"].value_counts())
+full_dupes = df_y[df_y["Authorization Identifier"].isin(dupes["Authorization Identifier"].unique())]
+full_dupes.sort_values("Authorization Identifier")
