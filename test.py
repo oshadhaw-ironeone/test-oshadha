@@ -1,10 +1,35 @@
-raw_header = pd.read_csv(file_name, encoding="cp1252", nrows=0, header=None).iloc[0].tolist()
-print(len(raw_header))  # should be 262
+columns = pd.read_csv(file_name, encoding="cp1252", nrows=0).columns
+print(len(columns))
 
-import collections
-counts = collections.Counter(raw_header)
-dupes = {name: n for name, n in counts.items() if n > 1}
-print(f"{len(dupes)} duplicate name(s) found:")
-for name, n in dupes.items():
-    positions = [i for i, c in enumerate(raw_header) if c == name]
-    print(f"  {name!r} appears {n}x at positions {positions}")
+all_null_columns = []
+constant_columns = []
+failed_columns = []
+
+for i, col in enumerate(columns):
+    if i % 20 == 0:
+        print(f"{i}/{len(columns)}")
+    try:
+        df = pd.read_csv(
+            file_name,
+            encoding="cp1252",
+            usecols=[i],
+            on_bad_lines="skip",   # skip ragged/malformed rows instead of erroring
+            low_memory=False
+        )
+        if df.shape[1] == 0:
+            failed_columns.append((i, col, "empty result"))
+            continue
+        if df.iloc[:, 0].isna().all():
+            all_null_columns.append(col)
+        elif df.iloc[:, 0].notna().all() and df.iloc[:, 0].nunique() == 1:
+            constant_columns.append(col)
+        del df
+    except Exception as e:
+        failed_columns.append((i, col, str(e)))
+
+print("All null columns:")
+print(all_null_columns)
+print("\nConstant columns:")
+print(constant_columns)
+print("\nFailed columns:")
+print(failed_columns)
