@@ -1,7 +1,7 @@
-# Basic overlap: how many df_y keys exist in df
-matches = df_y["transaction_match_key"].isin(df["transaction_match_key"])
-print(f"Matching rows in df_y: {matches.sum()} out of {len(df_y)}")
+sample_id = matched_rows["Authorization Identifier"].iloc[0]
 
-# See the actual matched rows from df_y
-matched_rows = df_y[matches]
-print(matched_rows.head())
+print("df_y row:")
+print(df_y[df_y["Authorization Identifier"] == sample_id][["Authorization Identifier", "Merchant Name", "Authorization Amount"]])
+
+print("\ndf row:")
+print(df[df["Authorization Identifier"] == sample_id][["Authorization Identifier", "Merchant Name", "Transaction Amount"]])
