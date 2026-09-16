@@ -1,12 +1,12 @@
-# How many unique accounts, and how many transactions per account
-acct_counts = df_all.groupby("Account Identifier").size()
-print(acct_counts.describe())
+train_cutoff = pd.Timestamp("2026-02-01")
+test_start   = pd.Timestamp("2026-02-15")  # 2-week embargo gap
 
-# Does an account's activity span the whole time range or a narrow window?
-acct_span = df_all.groupby("Account Identifier")["Authorization Date"].agg(["min", "max"])
-acct_span["span_days"] = (acct_span["max"] - acct_span["min"]).dt.days
-print(acct_span["span_days"].describe())
+train_accounts = acct_span[acct_span["max"] < train_cutoff].index
+test_accounts  = acct_span[acct_span["min"] >= test_start].index  # fully new accounts only
 
-# Fraud rate over time (weekly or monthly)
-fraud_rate_over_time = df_all.set_index("Authorization Date").resample("W")["fraud_label"].mean()
-fraud_rate_over_time.plot(title="Fraud rate over time")
+train_df = df_all[df_all["Account Identifier"].isin(train_accounts)]
+test_df  = df_all[df_all["Account Identifier"].isin(test_accounts)]
+
+print(f"Train: {len(train_df)} rows, {len(train_accounts)} accounts")
+print(f"Test:  {len(test_df)} rows, {len(test_accounts)} accounts")
+print(f"Dropped (straddling accounts): {6402 - len(train_accounts) - len(test_accounts)}")
