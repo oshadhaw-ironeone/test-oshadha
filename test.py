@@ -1,25 +1,30 @@
-import matplotlib.pyplot as plt
-import pandas as pd
+cutoff_val  = pd.Timestamp("2026-03-01")   # adjust to whatever split point you want
+cutoff_test = pd.Timestamp("2026-04-07")
 
-df["date"] = pd.to_datetime(df["date"])
+train_df = df[df["Authorization Date"] < cutoff_val].copy()
+val_df   = df[(df["Authorization Date"] >= cutoff_val) & (df["Authorization Date"] < cutoff_test)].copy()
+test_df  = df[df["Authorization Date"] >= cutoff_test].copy()
 
-# Percentile dates
-p20 = df["date"].quantile(0.20)
-p50 = df["date"].quantile(0.50)
-p80 = df["date"].quantile(0.80)
+print(f"Train: {len(train_df)} rows")
+print(f"Val:   {len(val_df)} rows")
+print(f"Test:  {len(test_df)} rows")
 
-plt.figure(figsize=(12, 5))
+train_fraud_rate = train_df["fraud_label"].mean()
+val_fraud_rate   = val_df["fraud_label"].mean()
+test_fraud_rate  = test_df["fraud_label"].mean()
 
-plt.hist(df["date"], bins=30)
+print(f"Train fraud rate: {train_fraud_rate:.4%} ({train_df['fraud_label'].sum()} fraud / {len(train_df)} rows)")
+print(f"Val fraud rate:   {val_fraud_rate:.4%} ({val_df['fraud_label'].sum()} fraud / {len(val_df)} rows)")
+print(f"Test fraud rate:  {test_fraud_rate:.4%} ({test_df['fraud_label'].sum()} fraud / {len(test_df)} rows)")
 
-plt.axvline(p20, linestyle="--", label=f"20%: {p20.date()}")
-plt.axvline(p50, linestyle="--", label=f"50%: {p50.date()}")
-plt.axvline(p80, linestyle="--", label=f"80%: {p80.date()}")
 
-plt.xlabel("Date")
-plt.ylabel("Count")
-plt.title("Date Distribution with Percentile Cutoffs")
-plt.legend()
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
+FEATURES = NUMERICAL + CATEGORICAL   # adjust to whatever your feature list variable is called
+TARGET   = "fraud_label"
+
+X_train, y_train = train_df[FEATURES], train_df[TARGET]
+X_val,   y_val   = val_df[FEATURES],   val_df[TARGET]
+X_test,  y_test  = test_df[FEATURES],  test_df[TARGET]
+
+print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")
+print(f"X_val:   {X_val.shape}, y_val:   {y_val.shape}")
+print(f"X_test:  {X_test.shape}, y_test:  {y_test.shape}")
