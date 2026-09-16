@@ -1,25 +1,22 @@
-from sklearn.metrics import roc_auc_score, average_precision_score, classification_report
+import numpy as np
 
-# 1. Compare metrics across train/val/test
-for name, X_, y_ in [("Train", X_tr, y_tr), ("Val", X_val, y_val), ("Test", X_test, y_test)]:
-    proba = model.predict_proba(X_)[:, 1]
-    auc = roc_auc_score(y_, proba)
-    ap  = average_precision_score(y_, proba)
-    print(f"{name:5s} | ROC-AUC: {auc:.4f} | PR-AUC: {ap:.4f}")
+def topk_precision_recall(y_true, y_proba, k):
+    # Get indices of top-k highest probability predictions
+    top_k_idx = np.argsort(y_proba)[-k:]
+    
+    y_true = np.array(y_true)
+    top_k_labels = y_true[top_k_idx]
+    
+    precision_at_k = top_k_labels.sum() / k
+    recall_at_k = top_k_labels.sum() / y_true.sum()
+    
+    return precision_at_k, recall_at_k
 
+# Example: top 500 riskiest test transactions
+k = 500
+prec_k, rec_k = topk_precision_recall(y_test, y_proba_test, k)
+print(f"Top-{k}: Precision = {prec_k:.3f}, Recall = {rec_k:.3f}")
 
-
-results_eval = model.evals_result()
-
-epochs = len(results_eval["validation_0"]["aucpr"])
-x_axis = range(epochs)
-
-plt.figure(figsize=(10, 5))
-plt.plot(x_axis, results_eval["validation_0"]["aucpr"], label="Val")
-plt.legend()
-plt.ylabel("PR-AUC")
-plt.xlabel("Boosting Round")
-plt.title("Validation PR-AUC over Training")
-plt.axvline(model.best_iteration, linestyle="--", color="gray", label=f"Best iter: {model.best_iteration}")
-plt.legend()
-plt.show()
+for k in [100, 500, 1000, 2000]:
+    prec_k, rec_k = topk_precision_recall(y_test, y_proba_test, k)
+    print(f"Top-{k:5d}: Precision = {prec_k:.3f} | Recall = {rec_k:.3f}")
