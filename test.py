@@ -1,19 +1,12 @@
-# Make sure the date column is datetime
-df_all["Authorization Date"] = pd.to_datetime(df_all["Authorization Date"], errors="coerce")
+# How many unique accounts, and how many transactions per account
+acct_counts = df_all.groupby("Account Identifier").size()
+print(acct_counts.describe())
 
-# Filter to fraud cases only
-fraud_df = df_all[df_all["fraud_label"] == 1]  # adjust if label is not 0/1
+# Does an account's activity span the whole time range or a narrow window?
+acct_span = df_all.groupby("Account Identifier")["Authorization Date"].agg(["min", "max"])
+acct_span["span_days"] = (acct_span["max"] - acct_span["min"]).dt.days
+print(acct_span["span_days"].describe())
 
-plt.figure(figsize=(12, 5))
-sns.histplot(
-    data=fraud_df,
-    x="Authorization Date",
-    bins=50,          # increase/decrease depending on your date range
-    color="crimson"
-)
-plt.title("Fraud Count Over Time")
-plt.xlabel("Authorization Date")
-plt.ylabel("Fraud Count")
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
+# Fraud rate over time (weekly or monthly)
+fraud_rate_over_time = df_all.set_index("Authorization Date").resample("W")["fraud_label"].mean()
+fraud_rate_over_time.plot(title="Fraud rate over time")
