@@ -1,31 +1,25 @@
-def topk_by_fraction(y_true, y_proba, fraction):
-    k = int(len(y_true) * fraction)
-    top_k_idx = np.argsort(y_proba)[-k:]
-    y_true = np.array(y_true)
-    top_k_labels = y_true[top_k_idx]
-    precision = top_k_labels.sum() / k
-    recall = top_k_labels.sum() / y_true.sum()
-    return precision, recall, k
+from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, average_precision_score
 
-for frac in [0.001, 0.005, 0.01, 0.02]:
-    p, r, k = topk_by_fraction(y_test, y_proba_test, frac)
-    print(f"Top {frac:.1%} (k={k}): Precision={p:.3f}, Recall={r:.3f}")
+roc_auc = roc_auc_score(y_test, y_proba_xgb)
+pr_auc  = average_precision_score(y_test, y_proba_xgb)
 
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-    import matplotlib.pyplot as plt
-import pandas as pd
+fpr, tpr, _ = roc_curve(y_test, y_proba_xgb)
+axes[0].plot(fpr, tpr, label=f"XGBoost (AUC={roc_auc:.3f})")
+axes[0].plot([0, 1], [0, 1], "k--", linewidth=1)
+axes[0].set_xlabel("False Positive Rate")
+axes[0].set_ylabel("True Positive Rate")
+axes[0].set_title("ROC Curve")
+axes[0].legend()
 
-# XGBoost supports several importance types: "weight", "gain", "cover"
-importance_dict = model.get_booster().get_score(importance_type="gain")
+precision, recall, _ = precision_recall_curve(y_test, y_proba_xgb)
+axes[1].plot(recall, precision, label=f"XGBoost (AP={pr_auc:.3f})")
+axes[1].axhline(y_test.mean(), color="k", linestyle="--", linewidth=1, label="baseline (fraud rate)")
+axes[1].set_xlabel("Recall")
+axes[1].set_ylabel("Precision")
+axes[1].set_title("Precision-Recall Curve")
+axes[1].legend()
 
-importance_df = pd.DataFrame({
-    "feature": list(importance_dict.keys()),
-    "importance": list(importance_dict.values())
-}).sort_values("importance", ascending=False)
-
-plt.figure(figsize=(10, 6))
-plt.barh(importance_df["feature"][:15][::-1], importance_df["importance"][:15][::-1])
-plt.xlabel("Gain")
-plt.title("Top 15 Feature Importances (Gain)")
 plt.tight_layout()
 plt.show()
