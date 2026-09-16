@@ -1,22 +1,31 @@
-import numpy as np
-
-def topk_precision_recall(y_true, y_proba, k):
-    # Get indices of top-k highest probability predictions
+def topk_by_fraction(y_true, y_proba, fraction):
+    k = int(len(y_true) * fraction)
     top_k_idx = np.argsort(y_proba)[-k:]
-    
     y_true = np.array(y_true)
     top_k_labels = y_true[top_k_idx]
-    
-    precision_at_k = top_k_labels.sum() / k
-    recall_at_k = top_k_labels.sum() / y_true.sum()
-    
-    return precision_at_k, recall_at_k
+    precision = top_k_labels.sum() / k
+    recall = top_k_labels.sum() / y_true.sum()
+    return precision, recall, k
 
-# Example: top 500 riskiest test transactions
-k = 500
-prec_k, rec_k = topk_precision_recall(y_test, y_proba_test, k)
-print(f"Top-{k}: Precision = {prec_k:.3f}, Recall = {rec_k:.3f}")
+for frac in [0.001, 0.005, 0.01, 0.02]:
+    p, r, k = topk_by_fraction(y_test, y_proba_test, frac)
+    print(f"Top {frac:.1%} (k={k}): Precision={p:.3f}, Recall={r:.3f}")
 
-for k in [100, 500, 1000, 2000]:
-    prec_k, rec_k = topk_precision_recall(y_test, y_proba_test, k)
-    print(f"Top-{k:5d}: Precision = {prec_k:.3f} | Recall = {rec_k:.3f}")
+
+    import matplotlib.pyplot as plt
+import pandas as pd
+
+# XGBoost supports several importance types: "weight", "gain", "cover"
+importance_dict = model.get_booster().get_score(importance_type="gain")
+
+importance_df = pd.DataFrame({
+    "feature": list(importance_dict.keys()),
+    "importance": list(importance_dict.values())
+}).sort_values("importance", ascending=False)
+
+plt.figure(figsize=(10, 6))
+plt.barh(importance_df["feature"][:15][::-1], importance_df["importance"][:15][::-1])
+plt.xlabel("Gain")
+plt.title("Top 15 Feature Importances (Gain)")
+plt.tight_layout()
+plt.show()
